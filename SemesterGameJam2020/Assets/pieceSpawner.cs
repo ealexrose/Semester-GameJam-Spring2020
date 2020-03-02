@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class pieceSpawner : MonoBehaviour
+public class PieceSpawner : MonoBehaviour
 {
     public List<GameObject> tetronimos;
     public GameObject lineManager;
+    public GameObject CurrentPieceIcon;
 
-    public float unitSpace;
+    public float unit;
     public float fieldLength;
     public float fieldHeight;
     public float baseSpeed;
@@ -20,23 +21,28 @@ public class pieceSpawner : MonoBehaviour
     {
         if (spawnFlag)
         {
-            spawnTetronimo();
+            LineCheck();
+            SpawnTetronimo();
             spawnFlag = false;
         }
     }
 
-    void spawnTetronimo()
+    void SpawnTetronimo()
     {
-        float spawnPos = unitSpace * (fieldLength / 2);
+        float spawnPos = unit * (fieldLength / 2);
 
-        GameObject spawnedPiece = Instantiate(tetronimos[(int)Mathf.Round(Random.Range(0, tetronimos.Count))], transform.position + Vector3.right*spawnPos, Quaternion.identity);
-        spawnedPiece.GetComponent<dropLogic>().spawner = this.gameObject;
-        spawnedPiece.GetComponent<dropLogic>().width = fieldLength;
-        spawnedPiece.GetComponent<dropLogic>().fallSpeed = baseSpeed;
+        GameObject spawnedPiece = Instantiate(tetronimos[(int)Mathf.Round(Random.Range(-.49f, tetronimos.Count + 0.3f))], transform.position + Vector3.right*spawnPos, Quaternion.identity);
+        spawnedPiece.GetComponent<DropLogic>().spawner = this.gameObject;
+        spawnedPiece.GetComponent<DropLogic>().IconDisplay = CurrentPieceIcon;
+        spawnedPiece.GetComponent<DropLogic>().width = fieldLength;
+        spawnedPiece.GetComponent<DropLogic>().fallSpeed = baseSpeed;
+        spawnedPiece.GetComponent<DropLogic>().fastFallSpeed = baseSpeed*4;
+        spawnedPiece.GetComponent<DropLogic>().transperency = 0.2f;
+
     }
 
     public void LineCheck()
     {
-        lineManager.GetComponent<lineManager>().lineCheck(fieldLength, fieldHeight, unitSpace);
+        lineManager.GetComponent<LineManager>().LineCheck(fieldLength, fieldHeight, unit);
     }
 }

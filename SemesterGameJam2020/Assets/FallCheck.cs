@@ -9,7 +9,8 @@ public class FallCheck : MonoBehaviour
     public bool downCheck;
     public bool leftCheck;
     public float baseRadius = 2.6f;
-
+    public MeshRenderer childRender;
+    public MeshInverter meshInverter;
     RaycastHit hitCheck;
     //Check all the given directions for ground, if ground is found return true
     bool GroundCast(Vector3 _dir)
@@ -58,5 +59,10 @@ public class FallCheck : MonoBehaviour
             }
         }
         return false;
+    }
+    public void ChildRender(bool renderMode)
+    {
+        childRender.enabled = renderMode;
+        meshInverter.InsideOut();
     }
 }

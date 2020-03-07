@@ -216,6 +216,7 @@ public class DropLogic : MonoBehaviour
                     {
                        ghostChild.gameObject.GetComponent<Renderer>().material.color = new Color(ghostMaterial.color.r, ghostMaterial.color.g, ghostMaterial.color.b, transperency);
                        ghostChild.GetComponent<BoxCollider>().enabled = false;
+                       ghostChild.GetComponent<FallCheck>().ChildRender(true);
                        Debug.Log(ghostChild);
                     }
                     dropDownGhost.GetComponent<DropLogic>().enabled = false;

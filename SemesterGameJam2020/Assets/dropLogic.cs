@@ -7,10 +7,11 @@ public class DropLogic : MonoBehaviour
 {
 
     /*===================================================================================================================
-     * DropLogic 1.1.0 - moves the piece while in a falling state
+     * DropLogic 1.2.0 - moves the piece while in a falling state
      * 
      * Manages the drop and rotational control of falling pieces and should prevent any invalid attempted movement
-     * 
+     * Creates a ghost outline at the piece destination
+     * TODO Quick drop functionality
      * =================================================================================================================*/
 
     //spawner is the creator of this piece, reference is used to let it know when it is time to drop another piece
@@ -23,8 +24,10 @@ public class DropLogic : MonoBehaviour
 
     public Material ghostMaterial;
     //fallSpeed is the speed at which the tetronimo falls, set by spawner
+    //fastFallSpeed is the speed of the fall when pressing the fast fall button, also set by the spawner
     //unit is the length of the cube in  unity units, makes math easier
     //width is the width of the field, used to not go out of bounds
+    //transperency is the visibility of the solid portion of the piece in the ghost outline
     public float fallSpeed;
     public float fastFallSpeed;
     float fastSpeed;
@@ -67,6 +70,8 @@ public class DropLogic : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Check to see fi any of the pieces of the Tetromino have touched the ground yet, if they have stop the piece, move it to align with the grid,
+        //Destroy its ghost, set the spawner to spawn the next piece, and destroy this script
         foreach (Transform child in rotater.transform)
         {
             if (child.GetComponent<FallCheck>().Check())
@@ -84,13 +89,17 @@ public class DropLogic : MonoBehaviour
             }
         }
 
+        //While the piece is falling
         if (isFalling)
         {
-
+            //If enough time has passed between actions, check to see if the player wants to shift the Tetromino or rotate
             if (shiftCoolDownTimer == 0)
             {
+                //If the Tetromino is not rotating, check for shifts
                 if (!isRotating)
                 {
+                    //In the case of moving left or right, destroy the current ghost, then move the piece and place a new ghost
+                    //TODO Change it so that it moves the locaiton of an already generated ghost instead of spawning a new one everytime to save memory
                     if (Input.GetButtonDown("LeftShift") && (ValidMovement(-(unit * (dimensions.w + 0.5f)))))
                     {
                         Destroy(dropDownGhost);
@@ -107,20 +116,22 @@ public class DropLogic : MonoBehaviour
                     }
                 }
 
+                //If the way is clear rotate the piece at the speed given when it spawned until the rotation is complete
                 if (Input.GetButtonDown("RotateCW") && !isRotating && ValidRotate(true))
                 {
                     iconControls.RotateMe(rotSpeedBase);
                     rotSpeed = rotSpeedBase;
                     rotCount = 0;
                     isRotating = true;
+                    //Sets new dimensions by rotating teh vectro as well
                     dimensions = new Vector4(dimensions.w, dimensions.x, dimensions.y, dimensions.z);
                     
                 }
-            }
+            }//If the cooldown ahs not finished tick it down
             else if(shiftCoolDownTimer >= 0 ){
                 shiftCoolDownTimer -= 1;
             }
-
+            //If a rotation is in progress, rotate and then check to see if rotation is complete, if it is, destroy the ghost and create a new one
             if (isRotating)
             {
                 rotater.transform.Rotate(new Vector3(0, 0, rotSpeed));
@@ -132,7 +143,7 @@ public class DropLogic : MonoBehaviour
                     isRotating = false;
                 }
             }
-
+            //IF the fastfall button is pressed, make the Tetromino fall at its fast fall speed
             if (Input.GetButton("fastFall"))
             {
                 fastSpeed = fastFallSpeed;
@@ -141,6 +152,7 @@ public class DropLogic : MonoBehaviour
             {
                 fastSpeed = 0;
             }
+            //If the Tetromino is not rotating, have it continure to fall
             if (!isRotating)
             {
                 transform.position -= ((fallSpeed + fastSpeed) * Vector3.up * Time.deltaTime);
@@ -149,7 +161,8 @@ public class DropLogic : MonoBehaviour
 
 
     }
-
+    //briefly Check a sphere from an offset of each piece of a tetromino at designated new location
+    //If there is any overlap with an obstacle do not move
     bool ValidMovement(float _xMov)
     {
         float newPos = rotater.transform.position.x + _xMov;
@@ -177,6 +190,8 @@ public class DropLogic : MonoBehaviour
         return true;
     }
 
+    //Rotate the piece to a couple critical angles and check if there is any overlap with other objects, if there is return that it is an invalid rotation
+    //Return to previous rotation
     bool ValidRotate(bool _dir)
     {
         float halfExtent = (unit / 2) - .01f;
@@ -199,15 +214,22 @@ public class DropLogic : MonoBehaviour
         rotater.transform.Rotate(new Vector3(0, 0, -rotCount));
         return true;
     }
+
+    //Search straight down until the bottom of the playfield is found, place a ghost at that location
     void DropDownSearch()
     {
+        //Where the piece starts, saved so that the location can be returned to
         Vector3 homePos = transform.position;
         bool reachedBottom = false;
+        //Loop until the bottom is found, once the bottom is found create a ghost a copy of the tetormino
+        //Save that tetromino in memory and then disable attached scripts. Then change the material to be the ghost material
         do
         {
+            //Check each piece of the tetromino to see if it intersects with the ground
             foreach (Transform child in rotater.transform)
             {
                 Collider[] obstacles = Physics.OverlapBox(child.transform.position, new Vector3((unit / 2) - .01f, (unit / 2) - .01f, (unit / 2) - .01f), child.rotation, groundMask);
+                //if it does interesect do the ghost setup and exit the loop
                 if (obstacles.Length > 0)
                 {
                     reachedBottom = true;
